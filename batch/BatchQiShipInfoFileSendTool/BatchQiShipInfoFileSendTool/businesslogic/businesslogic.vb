@@ -8,7 +8,7 @@ Public Class BusinessLogic
     Public Async Function UploadFile() As Task(Of Boolean)
         Dim fileLest As List(Of (DataPath As String, FinPath As String)) =
             Common.Utilities.FileTransferUtilities.GetReadyPairsHeadFin(
-            folder:=""
+            folder:=ConfigurationManager.AppSettings("INPUT_FOLDER")
             )
 
         If fileLest.Count = 0 Then
@@ -27,13 +27,13 @@ Public Class BusinessLogic
             Dim uploadResult As Boolean = Await UploadFile(filePair.DataPath)
             If uploadResult = False Then
                 ' アップロード失敗
-                ConfigManager.Logger?.WriteLog(LogManager.LogLevel.ERROR, "", $"【アップロード失敗】{filePair.DataPath}")
+                ConfigManager.Logger?.WriteLog(LogManager.LogLevel.ERROR, "", $"【アップロード失敗】処理中断{vbCrLf}{FileUtilities.GetFileNameFromPath(filePair.DataPath)}")
                 Return False
             End If
-            ConfigManager.Logger?.WriteLog(LogManager.LogLevel.INFO, "", $"【アップロード成功】{filePair.DataPath}")
+            ConfigManager.Logger?.WriteLog(LogManager.LogLevel.INFO, "", $"【アップロード成功】{FileUtilities.GetFileNameFromPath(filePair.DataPath)}")
 
             ' アップロードファイル待避処理
-            movefile(filePair)
+            MoveFile(filePair)
         Next
         Return True
     End Function
@@ -46,14 +46,14 @@ Public Class BusinessLogic
 
         'ファイル名チェック
         If IsValidQiShipFileName(filePair.DataPath) = False Then
-            ConfigManager.Logger?.WriteLog(LogManager.LogLevel.INFO, "", "【フォーマット相違】処理対象外ファイルのためスキップ")
+            ConfigManager.Logger?.WriteLog(LogManager.LogLevel.INFO, "", $"【フォーマット相違】処理スキップ{vbCrLf}{FileUtilities.GetFileNameFromPath(filePair.DataPath)}")
             Return False
         End If
 
         'アップロード済ファイルチェック
-        If IsUpload(filePair.DataPath) = False Then
-            ConfigManager.Logger?.WriteLog(LogManager.LogLevel.INFO, "", $"【アップロード済ファイル】{filePair.DataPath}")
-            movefile(filePair)
+        If IsUpload(filePair.DataPath) = True Then
+            ConfigManager.Logger?.WriteLog(LogManager.LogLevel.INFO, "", $"【アップロード済ファイル】削除漏れのため、ファイル削除{vbCrLf}{FileUtilities.GetFileNameFromPath(filePair.DataPath)}")
+            MoveFile(filePair)
             Return False
         End If
 
@@ -69,7 +69,7 @@ Public Class BusinessLogic
         Dim match As Match = Regex.Match(fileName, pattern, RegexOptions.IgnoreCase)
 
         If Not match.Success Then
-            ConfigManager.Logger?.WriteLog(LogManager.LogLevel.INFO, "", $"【ファイル名不正】{fileName}")
+            ConfigManager.Logger?.WriteLog(LogManager.LogLevel.INFO, "", $"【ファイル名不正】処理スキップ{vbCrLf}{fileName}")
             Return False
         End If
 
@@ -117,7 +117,7 @@ Public Class BusinessLogic
                 accessKey:=accessKey,
                 secretKey:=secretKey,
                 region:=region,
-                bucketName:=bucketName)
+                name:=bucketName)
 
         ' ファイルアップロード
         Dim key As String = String.Format(ConfigurationManager.AppSettings("S3_KEY"), FileUtilities.GetFileNameFromPath(filePath))
@@ -148,7 +148,6 @@ Public Class BusinessLogic
         Common.Utilities.FileUtilities.MoveFile(
                 srcPath:=filePath,
                 destPath:=bkupFilePath)
-        ConfigManager.Logger?.WriteLog(LogManager.LogLevel.INFO, "", $"【待避フォルダ移動（移動元）】{filePath}")
-        ConfigManager.Logger?.WriteLog(LogManager.LogLevel.INFO, "", $"【待避フォルダ移動（移動先）】{bkupFilePath}")
+        ConfigManager.Logger?.WriteLog(LogManager.LogLevel.INFO, "", $"【待避フォルダ移動】{vbCrLf}<移動元>{filePath}{vbCrLf}<移動先>{bkupFilePath}")
     End Sub
 End Class
