@@ -120,7 +120,7 @@ Public Class BusinessLogic
                 bucketName:=bucketName)
 
         ' ファイルアップロード
-        Dim key As String = ConfigurationManager.AppSettings("S3_KEY")
+        Dim key As String = String.Format(ConfigurationManager.AppSettings("S3_KEY"), FileUtilities.GetFileNameFromPath(filePath))
         Dim result As Boolean = Await s3.UploadS3File(key, filePath)
 
         Return result
