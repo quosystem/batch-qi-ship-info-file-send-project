@@ -24,6 +24,8 @@ Module Module1
             'イベント開始記録
             StratLog()
 
+            Dim logic As New BusinessLogic
+            logic.UploadFile().GetAwaiter().GetResult()
 
             'イベント結果記録
             EndLog()
@@ -42,10 +44,10 @@ Module Module1
         ConfigManager.RunEnvironment = CommonConstants.EnvironmentType.Production
 #End If
 
-        ConfigManager.SystemID = ConfigurationManager.AppSettings("SystemID")
-        ConfigManager.SystemName = ConfigurationManager.AppSettings("SystemName")
+        ConfigManager.SystemID = ConfigurationManager.AppSettings("SYSTEM_ID")
+        ConfigManager.SystemName = ConfigurationManager.AppSettings("SYSTEM_NAME")
         ConfigManager.SystemVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()
-        ConfigManager.SystemLogFolder = ConfigurationManager.AppSettings("SystemLogFolder")
+        ConfigManager.SystemLogFolder = ConfigurationManager.AppSettings("SYSTEM_LOG_FOLDER")
         ConfigManager.UserId = "Batch"
         ConfigManager.HostName = System.Environment.MachineName
 
